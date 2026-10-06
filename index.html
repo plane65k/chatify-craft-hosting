@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatify Craft</title>
+  <style>
+    /* ===== ORIGINAL INTRO ANIMATION STYLES ===== */
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Poppins', sans-serif;
+      background: #f5f5f5;
+    }
+
+    .white-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      z-index: 1000;
+      transition: background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .intro {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 1001;
+    }
+
+    .circle {
+      width: 140px;
+      height: 140px;
+      background: #34a853;
+      border-radius: 50%;
+      transform: scale(3);
+      animation: 
+        circleRise 1.02s ease-in-out forwards,
+        moveRight 0.24s ease-out 0.91s forwards;
+    }
+
+    @keyframes circleRise {
+      0% { transform: scale(7.75); }
+      100% { transform: translateX(30%) scale(1); }
+    }
+
+    @keyframes moveRight {
+      0% { transform: translateX(10%) scale(1); }
+      100% { transform: translateX(0px) scale(1); }
+    }
+
+    .text {
+      font-size: 52px;
+      font-weight: 700;
+      color: #222;
+      letter-spacing: 2px;
+      opacity: 0;
+      animation: textReveal 0.4s ease-out 0.7s forwards;
+      transition: color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+    }
+
+    @keyframes textReveal {
+      0% { opacity: 0; transform: translateX(-100%); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+
+    .skip-box {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      font-size: 16px;
+      color: #333;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 1001;
+    }
+
+    .skip-box.show {
+      opacity: 0;
+    }
+
+    .skip-box input {
+      transform: scale(1.2);
+      cursor: pointer;
+    }
+
+    .flash {
+      animation: flashLogo 1s ease-in-out forwards;
+    }
+
+    @keyframes flashLogo {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* ===== FALLBACK BUTTON (only shows if auto-open fails) ===== */
+    .launcher-fallback {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10000;
+      background: #1e2a1e;
+      border: 1px solid #3a6b3a;
+      padding: 14px 28px;
+      border-radius: 60px;
+      color: #d4f0d4;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+      transition: all 0.2s;
+      opacity: 0;
+      pointer-events: none;
+      cursor: pointer;
+      font-size: 1rem;
+      letter-spacing: 0.3px;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .launcher-fallback.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .launcher-fallback:hover {
+      background: #2b3d2b;
+      transform: translateX(-50%) scale(1.02);
+      border-color: #5ca85c;
+    }
+
+    .launcher-fallback i {
+      font-size: 1.4rem;
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="white-overlay" id="whiteOverlay"></div>
+
+  <div class="intro">
+    <div class="circle"></div>
+    <div class="text" id="chatifyText">Chatify Craft</div>
+    <label class="skip-box">
+      <input type="checkbox" id="skipNext" disabled> Skip intro next time
+    </label>
+  </div>
+
+  <div class="launcher-fallback" id="fallbackBtn">
+    <i></i> Open Chatify Craft
+  </div>
+
+  <script>
+    (function() {
+      // ===== CONFIG =====
+      const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/plane65k/chatify-craft/main/index.html';
+
+      // ===== INTRO ANIMATION (original) =====
+      const intro = document.querySelector(".intro");
+      const whiteOverlay = document.getElementById("whiteOverlay");
+      const chatifyText = document.getElementById("chatifyText");
+      const fallbackBtn = document.getElementById('fallbackBtn');
+
+      let launched = false;
+      let launchTimer = null;
+
+      function playIntro() {
+        const currentTheme = localStorage.getItem('theme') || 
+          (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const overlayColor = currentTheme === 'dark' ? '#333333' : 'white';
+
+        intro.style.display = "flex";
+        whiteOverlay.style.display = "block";
+        whiteOverlay.style.backgroundColor = overlayColor;
+
+        // Show skip box (still disabled)
+        setTimeout(() => document.querySelector(".skip-box").classList.add("show"), 1600);
+
+        // Complete animation + flash, then hide intro & overlay
+        setTimeout(() => {
+          chatifyText.classList.add("flash");
+          setTimeout(() => {
+            chatifyText.classList.remove("flash");
+            intro.style.display = "none";
+            whiteOverlay.style.display = "none";
+          }, 1000);
+        }, 1000);
+      }
+
+      // Start intro
+      playIntro();
+
+      // ===== FETCH AND LAUNCH =====
+      async function fetchChatifyCode() {
+        try {
+          const response = await fetch(GITHUB_RAW_URL);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const htmlText = await response.text();
+          return htmlText;
+        } catch (err) {
+          console.warn('Fetch error:', err);
+          return null;
+        }
+      }
+
+      async function openChatifyInNewTab() {
+        if (launched) return;
+        launched = true;
+
+        const chatifyHTML = await fetchChatifyCode();
+
+        if (chatifyHTML) {
+          try {
+            const newTab = window.open('about:blank', '_blank');
+            if (!newTab) {
+              console.warn('Popup blocked, showing fallback button.');
+              showFallbackButton();
+              return;
+            }
+
+            newTab.document.open();
+            newTab.document.write(chatifyHTML);
+            newTab.document.close();
+
+            // Attempt to close the current tab after a short delay
+            setTimeout(() => {
+              window.close();
+            }, 300);
+
+          } catch (e) {
+            console.error('Failed to open new tab:', e);
+            showFallbackButton();
+          }
+        } else {
+          showFallbackButton();
+        }
+      }
+
+      function showFallbackButton() {
+        // Hide intro completely
+        intro.style.display = "none";
+        whiteOverlay.style.display = "none";
+
+        fallbackBtn.classList.add('show');
+
+        fallbackBtn.addEventListener('click', async function() {
+          if (fallbackBtn.dataset.used === 'true') return;
+          fallbackBtn.dataset.used = 'true';
+          fallbackBtn.style.opacity = '0.5';
+          fallbackBtn.style.pointerEvents = 'none';
+
+          const html = await fetchChatifyCode();
+          if (html) {
+            const newTab = window.open('about:blank', '_blank');
+            if (newTab) {
+              newTab.document.open();
+              newTab.document.write(html);
+              newTab.document.close();
+              setTimeout(() => window.close(), 400);
+            } else {
+              alert('Please allow pop-ups for this site to open Chatify Craft.');
+              fallbackBtn.style.opacity = '1';
+              fallbackBtn.style.pointerEvents = 'auto';
+              fallbackBtn.dataset.used = 'false';
+            }
+          } else {
+            // Direct link fallback
+            window.open('https://github.com/plane65k/chatify-craft/blob/main/index.html', '_blank');
+            setTimeout(() => window.close(), 400);
+          }
+        });
+      }
+
+      // Launch after intro animation completes (~1.8s)
+      launchTimer = setTimeout(() => {
+        openChatifyInNewTab();
+      }, 1800);
+
+      // Click anywhere on intro to launch immediately
+      intro.addEventListener('click', (e) => {
+        if (!launched && e.target !== fallbackBtn) {
+          if (launchTimer) clearTimeout(launchTimer);
+          openChatifyInNewTab();
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
